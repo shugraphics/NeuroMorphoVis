@@ -383,11 +383,14 @@ if __name__ == "__main__":
     ###############################################################################################
     # Whole neuron mesh reconstruction
     ################################################################################################
-    if arguments.render_neuron_mesh or arguments.render_neuron_mesh_360 or arguments.reconstruct_neuron_mesh:
+    if arguments.render_neuron_mesh or \
+       arguments.render_neuron_mesh_360 or \
+       arguments.reconstruct_neuron_mesh:
 
         # Neuron mesh reconstruction and visualization
         proceed_neuron_mesh_reconstruction_visualization(
             cli_morphology=cli_morphology, cli_options=cli_options)
+
     exit(0)
 
     # Reconstruct the morphology skeleton

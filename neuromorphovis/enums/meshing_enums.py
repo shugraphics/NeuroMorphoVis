@@ -106,6 +106,9 @@ class Meshing:
         # Extrusion meshing
         EXTRUSION = 'MESHING_TECHNIQUE_EXTRUSION'
 
+        # Skinning meshing
+        SKINNING = 'MESHING_TECHNIQUE_SKINNING'
+
         ############################################################################################
         # @__init__
         ############################################################################################
@@ -133,6 +136,10 @@ class Meshing:
             # Extrusion
             elif argument == 'extrusion':
                 return Meshing.Technique.EXTRUSION
+
+            # Extrusion
+            elif argument == 'skinning':
+                return Meshing.Technique.SKINNING
 
             # By default use piecewise-watertight
             else:

@@ -67,6 +67,9 @@ class Sample:
         # Sample index along the section (from 0 to N, updated after section construction)
         self.id = id
 
+        # A uniform, but global, index of the sample with respect to the arbor
+        self.arbor_idx = -1
+
         # Sample index as reported in the morphology file, -1 is UNKNOWN or AUXILIARY
         self.morphology_index=morphology_id
 

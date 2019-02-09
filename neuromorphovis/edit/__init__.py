@@ -16,4 +16,4 @@
 ####################################################################################################
 
 from .morphology_global_editor import *
-from .morphology_editor_per_arbor import *
+from .morphology_editor import *

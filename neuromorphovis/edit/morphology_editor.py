@@ -23,6 +23,7 @@ import bpy, mathutils
 
 # Internal modules
 import neuromorphovis as nmv
+import neuromorphovis.bmeshi
 import neuromorphovis.consts
 import neuromorphovis.geometry
 import neuromorphovis.mesh
@@ -33,12 +34,13 @@ import neuromorphovis.scene
 ####################################################################################################
 # @MorphologyGlobalEditor
 ####################################################################################################
-class MorphologyGlobalEditor:
+class MorphologyEditor:
     """Morphology Global Editor
 
     This editor edits the morphology as a single object, rather than representing the skeleton
     with multiple arbor objects. This is quite convenient when you need to edit all the arbors in
-    a single step.
+    a single step. The implementation uses bmeshes instead of meshes to make it extremely fast to
+    toggle and switch between the morphology and the skeleton in case of long axons.
     """
 
     ################################################################################################
@@ -96,6 +98,7 @@ class MorphologyGlobalEditor:
 
         # Update the indices of the rest of the samples along the section
         for i in range(1, len(section.samples)):
+
             # Set the arbor index of the current sample
             section.samples[i].morphology_idx = index[0]
 
@@ -122,6 +125,7 @@ class MorphologyGlobalEditor:
 
         # Update the children sections recursively
         for child in arbor.children:
+
             # Update the children
             self.update_samples_indices_per_morphology_of_arbor(child, starting_index)
 
@@ -171,28 +175,7 @@ class MorphologyGlobalEditor:
             A given arbor of the morphology.
         """
 
-        # Initial point is at the soma center (typically origin)
-        point_0 = self.morphology.soma.centroid
-
-        # Last point is at the first sample of the root section of the arbor
-        point_1 = arbor.samples[0].point
-
-        # Deselect all the objects in the scene and select the skeleton mesh
-        nmv.scene.deselect_all()
-        nmv.scene.select_objects([self.skeleton_mesh])
-
-        # Select the vertex that we need to start the extrusion process from (0 is the soma vertex)
-        nmv.mesh.select_vertex(self.skeleton_mesh, 0)
-
-        # Toggle from the object mode to the edit mode
-        bpy.ops.object.editmode_toggle()
-
-        # Extrude
-        bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"mirror": False},
-                                         TRANSFORM_OT_translate={"value": point_1 - point_0})
-
-        # Toggle from the object mode to the edit mode
-        bpy.ops.object.editmode_toggle()
+        nmv.bmeshi.ops.extrude_vertex_towards_point(self.skeleton_mesh, 0, arbor.samples[0].point)
 
     ################################################################################################
     # @extrude_section
@@ -205,26 +188,11 @@ class MorphologyGlobalEditor:
             A given section to extrude a mesh around it.
         """
 
-        # On all the samples of the section
-        for i in range(0, len(section.samples) - 1):
+        for i in range(len(section.samples) - 1):
 
-            # Points
-            point_0 = section.samples[i].point
-            point_1 = section.samples[i + 1].point
-
-            # Select the vertex that we need to start the extrusion process from
-            nmv.mesh.ops.select_vertex(
-                self.skeleton_mesh, section.samples[i].morphology_idx)
-
-            # Toggle from the object mode to the edit mode
-            bpy.ops.object.editmode_toggle()
-
-            # Extrude
-            bpy.ops.mesh.extrude_region_move(MESH_OT_extrude_region={"mirror": False},
-                                             TRANSFORM_OT_translate={"value": point_1 - point_0})
-
-            # Toggle from the object mode to the edit mode
-            bpy.ops.object.editmode_toggle()
+            print('\t\tExtrusion Section [%d]' % section.samples[i].arbor_idx, end='\r')
+            nmv.bmeshi.ops.extrude_vertex_towards_point(
+                self.skeleton_mesh, section.samples[i].morphology_idx, section.samples[i + 1].point)
 
     ################################################################################################
     # @extrude_branch
@@ -296,9 +264,9 @@ class MorphologyGlobalEditor:
             self.extrude_arbor(arbor=self.morphology.axon)
 
     ################################################################################################
-    # @sketch_morphology_skeleton_using_meshes
+    # @sketch_morphology_skeleton
     ################################################################################################
-    def sketch_morphology_skeleton_using_meshes(self):
+    def sketch_morphology_skeleton(self):
         """Sketches the skeleton of the morphology as a single object such that we can control it
         and update it during the repair operation.
 
@@ -309,13 +277,18 @@ class MorphologyGlobalEditor:
         self.update_samples_indices_per_morphology_of_morphology()
 
         # Create an initial proxy mesh at the origin (reflecting the soma)
-        self.skeleton_mesh = nmv.geometry.create_vertex_mesh(name=self.morphology.label)
+        # self.skeleton_mesh = nmv.geometry.create_vertex_mesh(name=self.morphology.label)
+        self.skeleton_mesh = nmv.bmeshi.create_vertex()
 
         # Extrude the morphology skeleton
         self.extrude_morphology_skeleton()
 
+        # Convert the skeleton to a mesh
+        self.skeleton_mesh = nmv.bmeshi.convert_bmesh_to_mesh(self.skeleton_mesh, 'Skeleton')
 
-
+        # Select the skeleton mesh for the edit
+        nmv.scene.set_active_object(self.skeleton_mesh)
+        
     ################################################################################################
     # @update_section_coordinates
     ################################################################################################

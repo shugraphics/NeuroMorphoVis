@@ -35,6 +35,11 @@ import neuromorphovis.scene
 import neuromorphovis.utilities
 
 
+import bmesh
+from random import uniform
+import mathutils
+
+
 ####################################################################################################
 # @ExtrusionBuilder
 ####################################################################################################
@@ -92,7 +97,7 @@ class SkinningBuilder:
 
         # A list of all the meshes that are reconstructed on a piecewise basis and correspond to
         # the different components of the neuron including soma, arbors and the spines as well
-        self.reconstructed_neuron_meshes= list()
+        self.reconstructed_neuron_meshes = list()
 
     ################################################################################################
     # @create_materials
@@ -307,10 +312,62 @@ class SkinningBuilder:
         for child in root.children:
             self.update_arbor_samples_radii(child, max_branching_order)
 
+
+
     ################################################################################################
     # @extrude_section
     ################################################################################################
     def extrude_section(self,
+                        arbor_bmesh_object,
+                        section):
+        """Extrudes the section along its samples starting from the first one to the last one.
+
+        Note that the mesh to be extruded is already selected and there is no need to pass it.
+
+        :param section:
+            A given section to extrude a mesh around it.
+        """
+
+        for i in range(len(section.samples) - 1):
+            print('\t\tExtrusion Section [%d]' % section.samples[i].arbor_idx, end='\r')
+            point_0 = section.samples[i].point
+            point_1 = section.samples[i + 1].point
+
+            nmv.bmeshi.ops.extrude_vertex_towards_point(
+                arbor_bmesh_object, section.samples[i].arbor_idx, point_1)
+
+    ################################################################################################
+    # @create_root_point_mesh
+    ################################################################################################
+    def extrude_arbor(self,
+                      arbor_bmesh_object,
+                      root,
+                      max_branching_order):
+        """Extrude the given arbor section by section recursively.
+
+        :param root:
+            The root of a given section.
+        :param max_branching_order:
+            The maximum branching order set by the user to terminate the recursive call.
+        """
+
+        # Do not proceed if the branching order limit is hit
+        if root.branching_order > max_branching_order:
+            return
+
+        # Extrude the section
+        self.extrude_section(arbor_bmesh_object, root)
+
+        # Extrude the children sections recursively
+        for child in root.children:
+            self.extrude_arbor(arbor_bmesh_object, child, max_branching_order)
+
+
+
+    ################################################################################################
+    # @extrude_section
+    ################################################################################################
+    def extrude_sectionx(self,
                         section):
         """Extrudes the section along its samples starting from the first one to the last one.
 
@@ -336,7 +393,7 @@ class SkinningBuilder:
     ################################################################################################
     # @create_root_point_mesh
     ################################################################################################
-    def extrude_arbor(self,
+    def extrude_arborx(self,
                       root,
                       max_branching_order):
         """Extrude the given arbor section by section recursively.
@@ -384,13 +441,13 @@ class SkinningBuilder:
         bpy.ops.object.editmode_toggle()
 
         # Add a skin modifier
-        bpy.ops.object.modifier_add(type='SKIN')
+        #bpy.ops.object.modifier_add(type='SKIN')
 
         # Update the Skin modifiers parameters
-        bpy.context.object.modifiers["Skin"].use_x_symmetry = False
-        bpy.context.object.modifiers["Skin"].use_y_symmetry = False
-        bpy.context.object.modifiers["Skin"].use_z_symmetry = False
-        bpy.context.object.modifiers["Skin"].use_smooth_shade = False
+        #bpy.context.object.modifiers["Skin"].use_x_symmetry = False
+        #bpy.context.object.modifiers["Skin"].use_y_symmetry = False
+        #bpy.context.object.modifiers["Skin"].use_z_symmetry = False
+        #bpy.context.object.modifiers["Skin"].use_smooth_shade = False
 
         # Return a reference to the root point mesh
         return root_point_mesh
@@ -447,6 +504,22 @@ class SkinningBuilder:
         for child in section.children:
             self.update_samples_indices_per_arbor(child, index, max_branching_order)
 
+
+    def create_vertex_object(self):
+        bm = bmesh.new()
+        bm.verts.new()
+        return bm
+
+    def extrude_vertex_to_point(self, bm, index, point):
+        # Update the bmesh faces
+        bm.verts.ensure_lookup_table()
+        print(len(bm.verts))
+        p = bm.verts[index]
+        ret = bmesh.ops.extrude_vert_indiv(bm, verts=[p])
+        v = ret['verts'][0]
+        v.co += mathutils.Vector([uniform(-5, 5) for axis in "xyz"])
+        # r[index].co += mathutils.Vector((1, 0, 0))
+
     ################################################################################################
     # @create_arbor_mesh
     ################################################################################################
@@ -470,13 +543,72 @@ class SkinningBuilder:
         samples_global_arbor_index = [0]
         self.update_samples_indices_per_arbor(arbor, samples_global_arbor_index, max_branching_order)
 
-        # Create an initial proxy mesh at the origin
-        arbor_mesh = self.create_root_point_mesh(arbor_name)
 
-        arbor_mesh.location = arbor.samples[0].point
+        # creating the vertex
+        arbor_bmesh_object = nmv.bmeshi.create_vertex(arbor.samples[0].point)
+
+        # Extrude arbor mesh using the skinning method using a temporary radius
+        self.extrude_arbor(arbor_bmesh_object, arbor, max_branching_order)
+
+        me = bpy.data.meshes.new(arbor_name)
+        ob = bpy.data.objects.new(arbor_name, me)
+        arbor_bmesh_object.to_mesh(me)
+
+        skin = ob.modifiers.new(name="Skin", type='SKIN')
+        sub = ob.modifiers.new(name="Sub", type='SUBSURF')
+        sub.levels = 2
+        bpy.context.scene.objects.link(ob)
+
+        """
+        context = bpy.context
+        scene = context.scene
+        me = bpy.data.meshes.new("Thing")
+        ob = bpy.data.objects.new("Thing", me)
+
+        
+        bm = bmesh.new()
+        root = bm.verts.new()
+        for i in range(1):  # tree branches
+            v = root
+            for l in range(1, 10):
+                ret = bmesh.ops.extrude_vert_indiv(bm, verts=[v])
+                for v in ret['verts']:
+                    v.co += mathutils.Vector([uniform(-5, 5) for axis in "xyz"])
+                bm.to_mesh(me)
+        bm = self.create_vertex_object()
+        for i in range(6):
+            self.extrude_vertex_to_point(bm, i, 0)
+        bm.to_mesh(me)
+
+        ob.location = (1, 2, 3)
+        skin = ob.modifiers.new(name="Skin", type='SKIN')
+        sub = ob.modifiers.new(name="Sub", type='SUBSURF')
+        sub.levels = 2
+        scene.objects.link(ob)
+        """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # Create an initial proxy mesh at the origin
+        arbor_mesh = None
+        # arbor_mesh = self.create_root_point_mesh(arbor_name)
+        # arbor_mesh.location = arbor.samples[0].point
 
         # Toggle from the object mode to the edit mode
-        bpy.ops.object.editmode_toggle()
+        # bpy.ops.object.editmode_toggle()
 
         """
         # Extrude the created mesh (already selected) to the first sample along the arbor (root)
@@ -494,32 +626,35 @@ class SkinningBuilder:
                                       proportional_edit_falloff='SMOOTH', proportional_size=1)
         """
 
+
+
+        return
         # Extrude arbor mesh using the skinning method using a temporary radius
         self.extrude_arbor(root=arbor, max_branching_order=max_branching_order)
         print("")
 
         # Update the radii of the arbor at each sample
-        self.update_arbor_samples_radii(root=arbor, max_branching_order=max_branching_order)
+        # self.update_arbor_samples_radii(root=arbor, max_branching_order=max_branching_order)
         print("")
 
         # Toggle back to the object mode
         bpy.ops.object.editmode_toggle()
 
         # Apply the skinning modifier
-        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Skin")
+        # bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Skin")
 
         # Remove the first face of the mesh for the connectivity
         # TODO: Check if this arbor will be connected to the soma or not (pre-processing step)
-        nmv.mesh.ops.remove_first_face_of_quad_mesh_object(arbor_mesh)
+        # nmv.mesh.ops.remove_first_face_of_quad_mesh_object(arbor_mesh)
 
         # Smooth the arbor
-        nmv.mesh.smooth_object(mesh_object=arbor_mesh, level=2)
+        # nmv.mesh.smooth_object(mesh_object=arbor_mesh, level=2)
 
         # Shade smooth the object
-        nmv.mesh.shade_smooth_object(mesh_object=arbor_mesh)
+        # nmv.mesh.shade_smooth_object(mesh_object=arbor_mesh)
 
         # Add back the face we removed before the smoothing to be able to bridge
-        nmv.mesh.close_open_faces(mesh_object=arbor_mesh)
+        # nmv.mesh.close_open_faces(mesh_object=arbor_mesh)
 
         # Add a reference of the reconstructed arbor mesh to the root section of the arbor
         arbor.mesh = arbor_mesh
@@ -937,17 +1072,15 @@ class SkinningBuilder:
         # Verify and repair the morphology
         self.verify_and_repair_morphology()
 
-
-
         # Build the soma
-        self.reconstruct_soma_mesh()
+        # self.reconstruct_soma_mesh()
 
         # Build the arbors
         # self.reconstruct_arbors_meshes()
         self.build_arbors()
 
         # Connect the arbors to the soma
-        self.connect_arbors_to_soma()
+        # self.connect_arbors_to_soma()
 
         print('Skinning...')
         return self.reconstructed_neuron_meshes

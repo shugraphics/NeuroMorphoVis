@@ -24,6 +24,21 @@ import neuromorphovis.utilities
 
 
 ####################################################################################################
+# @create_vertex
+####################################################################################################
+def create_vertex(location=(0, 0, 0)):
+
+    # Create a new bmesh object
+    bmesh_vertex = bmesh.new()
+
+    # Create a new vertex
+    bmesh.ops.create_vert(bmesh_vertex, co=location)
+
+    # Return a reference to the bmesh
+    return bmesh_vertex
+
+
+####################################################################################################
 # @create_uv_sphere
 ####################################################################################################
 def create_uv_sphere(radius=1,

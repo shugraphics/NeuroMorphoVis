@@ -317,6 +317,43 @@ def extrude_face_to_face(bmesh_object,
 ###################################################################################################
 # @extrude_face_to_point
 ####################################################################################################
+def extrude_point_to_point(bmesh_object,
+                           point_index,
+                           point):
+    """Extrude a point in a bmesh to a given point.
+
+    :param bmesh_object:
+        A given bmesh object.
+    :param point_index:
+        Point index.
+    :param point:
+        Target point.
+    :return:
+    """
+
+    # Get delta
+    delta = point - bmesh_object.verts[point_index]
+
+    # Get orientation
+    orientation = delta.normalized()
+
+    # Compute the extrusion delta vector
+    extrusion_delta = orientation * delta.length
+
+    # Extrude the face
+    face = nmv.bmeshi.extrude_face_to_face(bmesh_object, face)
+
+    # Translate the extruded face by the extrusion delta vector
+    bmesh.ops.translate(bmesh_object, vec=extrusion_delta, verts=face.verts)
+
+    # Return the index of the extruded face
+    return face.index
+
+
+
+###################################################################################################
+# @extrude_face_to_point
+####################################################################################################
 def extrude_face_to_point(bmesh_object,
                           face_index,
                           point):

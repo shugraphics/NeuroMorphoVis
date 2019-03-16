@@ -140,6 +140,9 @@ class SkinningBuilder:
             *[self.morphology,
               nmv.skeleton.ops.label_primary_and_secondary_sections_based_on_radii])
 
+        nmv.skeleton.ops.apply_operation_to_morphology(
+            *[self.morphology, nmv.skeleton.ops.resample_sections, 2.5])
+
     ################################################################################################
     # @modify_morphology_skeleton
     ################################################################################################
@@ -269,36 +272,6 @@ class SkinningBuilder:
         for child in root.children:
             self.extrude_arbor(arbor_bmesh_object, child, max_branching_order)
 
-
-    def extrude_auxiliary_section_from_soma_center_to_arbor(self,
-                                                            arbor,
-                                                            arbor_bmesh_object,
-                                                            number_samples):
-
-        # Soma origin
-        point_0 = Vector((0.0, 0.0, 0.0))
-
-        # Initial sample of the arbor
-        point_1 = arbor.samples[0].point
-
-        # Compute the distance between the two points
-        distance = (point_1 - point_0).length
-
-        # Direction
-        direction = (point_1 - point_0).normalized()
-
-        # Step
-        step = distance / number_samples
-
-        for i in range(1, number_samples - 1):
-
-            extrusion_point = point_0 + direction * step * i
-
-            # Extrude to the first sample along the arbor
-            nmv.bmeshi.ops.extrude_vertex_towards_point(arbor_bmesh_object, i - 1,
-                                                        extrusion_point)
-
-
     ################################################################################################
     # @create_arbor_mesh
     ################################################################################################
@@ -318,8 +291,6 @@ class SkinningBuilder:
             A reference to the created mesh object.
         """
 
-        number_samples = 5
-
         # Initially, this index is set to ONE and incremented later, sample zero is reserved to
         # the auxiliary sample that is added at the soma
         samples_global_arbor_index = [2]
@@ -329,17 +300,10 @@ class SkinningBuilder:
         # Create the initial vertex of the arbor skeleton
         arbor_bmesh_object = nmv.bmeshi.create_vertex()
 
-        #self.extrude_auxiliary_section_from_soma_center_to_arbor(arbor, arbor_bmesh_object, number_samples)
-
-        # Extrude to the first sample along the arbor
-        # nmv.bmeshi.ops.extrude_vertex_towards_point(arbor_bmesh_object, 0, Vector((0, 0, 0)))
-
-
         direction = arbor.samples[0].point.normalized()
 
         p0 = arbor.samples[0].point - 0.01 * direction
 
-        # Extrude to the first sample along the arbor
         # Extrude to the first sample along the arbor
         nmv.bmeshi.ops.extrude_vertex_towards_point(arbor_bmesh_object, 0, p0)
         nmv.bmeshi.ops.extrude_vertex_towards_point(arbor_bmesh_object, 1, arbor.samples[0].point)
@@ -575,22 +539,6 @@ class SkinningBuilder:
                 vertex.co = vertex.co + (vertex.normal * roughness_value)
                 vertex.select = False
 
-        """
-                        if nmv.geometry.ops.is_point_inside_sphere(
-                        stable_extent_center, self.morphology.soma.smallest_radius,
-                        vertex.co):
-                    vertex.select = True
-                    vertex.co = vertex.co + (vertex.normal * random.uniform(0, 0.01))
-                    vertex.select = False
-
-                else:
-                    if 0.0 < random.uniform(0, 1.0) < 0.1:
-                        vertex.select = True
-                        vertex.co = vertex.co + (vertex.normal * random.uniform(-0.1, 0.2))
-                        vertex.select = False
-            else:
-        """
-
     ################################################################################################
     # @add_surface_noise
     ################################################################################################
@@ -640,14 +588,17 @@ class SkinningBuilder:
         # Apply skeleton-based operation, if required, to slightly modify the morphology skeleton
         self.modify_morphology_skeleton()
 
-        # Build the soma
+        # Build the soma mesh
         self.reconstruct_soma_mesh()
 
         # Build the arbors
-        # self.reconstruct_arbors_meshes()
         self.build_arbors()
 
         # self.add_surface_noise()
+
+        # Connect the soma to the arbors
+        self.connect_arbors_to_soma()
+
 
         nmv.logger.header('Done!')
 

@@ -16,6 +16,11 @@
 ####################################################################################################
 
 
+# Internal imports
+import neuromorphovis as nmv
+import neuromorphovis.consts
+
+
 ####################################################################################################
 # @branches_intersect
 ####################################################################################################
@@ -40,6 +45,10 @@ def branches_intersect(branch_1,
     # Get the initial segment (is) points of the two branches
     is_point_1 = branch_1.samples[0].point
     is_point_2 = branch_2.samples[0].point
+
+    # Zero length points cannot be used
+    if is_point_1.length < 1e-5 or is_point_2.length < 1e-5:
+        return True
 
     # Get the initial segments radii of the two branches
     is_radius_1 = branch_1.samples[0].radius

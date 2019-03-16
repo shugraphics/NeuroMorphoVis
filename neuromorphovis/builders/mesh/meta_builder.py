@@ -306,7 +306,7 @@ class MetaBuilder:
 
         # Proceed segment by segment
         for i in range(len(samples) - 1):
-            self.meta_skeleton.resolution = samples[i].radius * 0.5
+            #self.meta_skeleton.resolution = samples[i].radius * 0.5
 
             # Create the meta segment
             self.create_meta_segment(

@@ -204,26 +204,3 @@ ui_analysis_items = [
                  data_format='FLOAT',
                  unit='VOLUME'),
 ]
-
-
-
-
-
-# compute histograms and distributions
-'''
-radii or sections length
-
-- histogram 
-- radius distance from soma 
-
-
-number of samples 
-- per section (histogram)
-- per arbor (bar chart)
-
-
-sections length
-- 
-
-
-'''

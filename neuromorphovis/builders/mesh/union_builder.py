@@ -105,8 +105,8 @@ class UnionBuilder:
         # if self.options.mesh.edges == enumerators.__meshing_smooth_edges__:
 
         # Apply the resampling filter on the whole morphology skeleton
-        nmv.skeleton.ops.apply_operation_to_morphology(
-            *[self.morphology, nmv.skeleton.ops.resample_sections, 0.5])
+        #nmv.skeleton.ops.apply_operation_to_morphology(
+        #    *[self.morphology, nmv.skeleton.ops.resample_sections, 2.5])
 
         # Primary and secondary branching
         if self.options.mesh.branching == nmv.enums.Meshing.Branching.ANGLES:
@@ -406,6 +406,9 @@ class UnionBuilder:
         # Note that the radius is set to conserve the volumes of the branches
         bevel_object = nmv.mesh.create_bezier_circle(
             radius=1.0 * math.sqrt(2), vertices=4, name='bevel')
+
+        bevel_object = nmv.mesh.create_bezier_circle(
+            radius=1.0, vertices=32, name='bevel')
 
         #bevel_object = nmv.mesh.create_bezier_circle(
         #    radius=1.0, vertices=12, name='bevel')

@@ -127,6 +127,10 @@ class AnalyzeMorphology(bpy.types.Operator):
         context.scene.MorphologyAnalyzed = nmv.interface.analyze_morphology(
             morphology=nmv.interface.ui_morphology, context=context)
 
+        # Warn the user that the morphology could not be analysed
+        if not context.scene.MorphologyAnalyzed:
+            self.report({'WARNING'}, 'Corrupted morphology and cannot be analysed!')
+
         return {'FINISHED'}
 
 

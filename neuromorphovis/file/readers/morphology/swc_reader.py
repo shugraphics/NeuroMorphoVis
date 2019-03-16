@@ -128,6 +128,10 @@ class SWCReader:
         # Add the starting points and mark the terminals
         for path in self.paths:
 
+            # Ignore empty lists
+            if len(path) == 0:
+                continue
+
             # Get the index of the first sample along the path
             first_sample_index = path[0]
 

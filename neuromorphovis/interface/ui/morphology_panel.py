@@ -56,6 +56,26 @@ class MorphologyPanel(bpy.types.Panel):
     ################################################################################################
     # Panel options
     ################################################################################################
+    # Reconstruction method
+    bpy.types.Scene.MorphologyReconstructionTechnique = EnumProperty(
+        items=[(nmv.enums.Skeletonization.Method.DISCONNECTED_SEGMENTS,
+                'Disconnected Segments',
+                "Each segment is an independent object (this approach is time consuming)"),
+               (nmv.enums.Skeletonization.Method.DISCONNECTED_SECTIONS,
+                'Disconnected Sections',
+                "Each section is an independent object"),
+               (nmv.enums.Skeletonization.Method.ARTICULATED_SECTIONS,
+                'Articulated Sections',
+                "Each section is an independent object, but connected with a pivot"),
+               (nmv.enums.Skeletonization.Method.CONNECTED_SECTION_ORIGINAL,
+                'Connected Sections (Original)',
+                "The sections of a single arbor are connected together"),
+               (nmv.enums.Skeletonization.Method.CONNECTED_SECTION_REPAIRED,
+                'Connected Sections (Repaired)',
+                "The morphology is repaired and fully reconstructed ")],
+        name="Method",
+        default=nmv.enums.Skeletonization.Method.DISCONNECTED_SECTIONS)
+
     # Build soma
     bpy.types.Scene.BuildSoma = EnumProperty(
         items=[(nmv.enums.Soma.Representation.IGNORE,
@@ -172,26 +192,6 @@ class MorphologyPanel(bpy.types.Panel):
         name="Articulation Color",
         subtype='COLOR', default=nmv.enums.Color.ARTICULATION, min=0.0, max=1.0,
         description="The color of the articulations in the Articulated Section mode")
-
-    # Reconstruction method
-    bpy.types.Scene.MorphologyReconstructionTechnique = EnumProperty(
-        items=[(nmv.enums.Skeletonization.Method.DISCONNECTED_SEGMENTS,
-                'Disconnected Segments',
-                "Each segment is an independent object (this approach is time consuming)"),
-               (nmv.enums.Skeletonization.Method.DISCONNECTED_SECTIONS,
-                'Disconnected Sections',
-                "Each section is an independent object"),
-               (nmv.enums.Skeletonization.Method.ARTICULATED_SECTIONS,
-                'Articulated Sections',
-                "Each section is an independent object, but connected with a pivot"),
-               (nmv.enums.Skeletonization.Method.CONNECTED_SECTION_ORIGINAL,
-                'Connected Sections (Original)',
-                "The sections of a single arbor are connected together"),
-               (nmv.enums.Skeletonization.Method.CONNECTED_SECTION_REPAIRED,
-                'Connected Sections (Repaired)',
-                "The morphology is repaired and fully reconstructed ")],
-        name="Method",
-        default=nmv.enums.Skeletonization.Method.DISCONNECTED_SECTIONS)
 
     # Arbors style
     bpy.types.Scene.ArborsStyle = EnumProperty(
@@ -350,6 +350,10 @@ class MorphologyPanel(bpy.types.Panel):
         # Set the rendering options
         nmv.interface.ui.morphology_panel_options.set_export_options(
             layout=layout, scene=current_scene, options=nmv.interface.ui_options)
+
+        # If the morphology is not loaded, disable the UI
+        if nmv.interface.ui_morphology is None:
+            layout.enabled = False
 
 
 ####################################################################################################

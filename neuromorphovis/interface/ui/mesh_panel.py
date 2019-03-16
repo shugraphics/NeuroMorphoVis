@@ -61,6 +61,23 @@ class MeshPanel(bpy.types.Panel):
     shown_hidden_rows = list()
 
     # Meshing technique
+    bpy.types.Scene.MeshingTechnique = EnumProperty(
+        items=[(nmv.enums.Meshing.Technique.PIECEWISE_WATERTIGHT,
+                'Piecewise Watertight',
+                'Extended piecewise watertight meshing with some flexibility to adapt the options'),
+               (nmv.enums.Meshing.Technique.SKINNING,
+                'Skinning',
+                'Skinning'),
+               (nmv.enums.Meshing.Technique.UNION,
+                'Union',
+                'Union'),
+               (nmv.enums.Meshing.Technique.META_OBJECTS,
+                'Meta Objects',
+                'Creates watertight mesh models using meta balls, but it could be slower than '
+                'the other methods'), ],
+        name='Method', default=nmv.enums.Meshing.Technique.META_OBJECTS)
+
+    # Skeletonization technique
     bpy.types.Scene.SkeletonizationTechnique = EnumProperty(
         items=[(nmv.enums.Meshing.Skeleton.ORIGINAL,
                 'Original',
@@ -75,22 +92,6 @@ class MeshPanel(bpy.types.Panel):
                 'Tapered Zigzag',
                 'Create a zigzagged and tapered skeleton (artistic)')],
         name='Skeleton', default=nmv.enums.Meshing.Skeleton.ORIGINAL)
-
-    # Meshing technique
-    bpy.types.Scene.MeshingTechnique = EnumProperty(
-        items=[(nmv.enums.Meshing.Technique.PIECEWISE_WATERTIGHT,
-                'Piecewise Watertight',
-                'Extended piecewise watertight meshing with some flexibility to adapt the options'),
-               (nmv.enums.Meshing.Technique.SKINNING,
-                'Skinning',
-                'Skinning'),
-               (nmv.enums.Meshing.Technique.UNION,
-                'Union',
-                'Union'),
-               (nmv.enums.Meshing.Technique.META_OBJECTS,
-                'Meta Objects',
-                'Creates watertight mesh models using meta balls, but it could be slower than the other methods'),],
-        name='Meshing Method', default=nmv.enums.Meshing.Technique.META_OBJECTS)
 
     # Is the soma connected to the first order branches or not !
     bpy.types.Scene.MeshSomaConnection = EnumProperty(
@@ -529,6 +530,18 @@ class MeshPanel(bpy.types.Panel):
         # Get a reference to the layout of the panel
         layout = self.layout
 
+        # Reconstruction options
+        reconstruction_options_row = layout.row()
+        reconstruction_options_row.label(text='Reconstruction Options:', icon='MESH_ICOSPHERE')
+
+        # Which meshing technique to use
+        meshing_method_row = layout.row()
+
+        meshing_method_row.prop(context.scene, 'MeshingTechnique', icon='PARTICLE_POINT')
+
+        # Pass options from UI to system
+        nmv.interface.ui_options.mesh.meshing_technique = context.scene.MeshingTechnique
+
         # Skeleton meshing options
         skeleton_meshing_options_row = layout.row()
         skeleton_meshing_options_row.label(text='Skeleton Meshing Options:', icon='SURFACE_DATA')
@@ -539,13 +552,6 @@ class MeshPanel(bpy.types.Panel):
 
         # Pass options from UI to system
         nmv.interface.ui_options.mesh.skeletonization = context.scene.SkeletonizationTechnique
-
-        # Which meshing technique to use
-        meshing_method_row = layout.row()
-        meshing_method_row.prop(context.scene, 'MeshingTechnique', icon='OUTLINER_OB_EMPTY')
-
-        # Pass options from UI to system
-        nmv.interface.ui_options.mesh.meshing_technique = context.scene.MeshingTechnique
 
         # Draw the meshing options
         if context.scene.MeshingTechnique == nmv.enums.Meshing.Technique.PIECEWISE_WATERTIGHT:
@@ -939,6 +945,10 @@ class MeshPanel(bpy.types.Panel):
 
         # Mesh export options
         self.draw_mesh_export_options(context)
+
+        # If the morphology is not loaded, disable the UI
+        if nmv.interface.ui_morphology is None:
+            self.layout.enabled = False
 
 
 ####################################################################################################

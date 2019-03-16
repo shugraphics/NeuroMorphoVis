@@ -86,6 +86,10 @@ class AnalysisPanel(bpy.types.Panel):
             export_analysis_row = layout.row()
             export_analysis_row.operator('export.analysis_results', icon='MESH_DATA')
 
+        # If the morphology is not loaded, disable the UI
+        if nmv.interface.ui_morphology is None:
+            layout.enabled = False
+
 
 ####################################################################################################
 # @SaveSomaMeshBlend

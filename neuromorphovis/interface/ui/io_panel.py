@@ -15,6 +15,9 @@
 # If not, see <http://www.gnu.org/licenses/>.
 ####################################################################################################
 
+# System imports
+import copy
+
 # Blender imports
 import bpy
 from bpy.props import EnumProperty
@@ -24,7 +27,7 @@ from bpy.props import BoolProperty
 # Internal imports
 import neuromorphovis as nmv
 import neuromorphovis.enums
-import neuromorphovis.interface
+import neuromorphovis.scene
 
 
 ####################################################################################################
@@ -170,28 +173,34 @@ class IOPanel(bpy.types.Panel):
             # Report an invalid input source
             self.report({'ERROR'}, 'Invalid Input Source')
 
+        # Morphology loading
+        morphology_loading_row = layout.row(align=True)
+        morphology_loading_row.operator('load.morphology', icon='PARTICLE_POINT')
+
         # Output options
-        output_data_options_row = layout.row()
+        output_layout = layout.column()
+
+        output_data_options_row = output_layout.row()
         output_data_options_row.label(text='Output Options:', icon='SCRIPT')
 
         # Output directory
-        output_directory_row = layout.row()
+        output_directory_row = output_layout.row()
         output_directory_row.prop(scene, 'OutputDirectory')
 
         # Default paths
-        default_paths_row = layout.row()
+        default_paths_row = output_layout.row()
         default_paths_row.prop(scene, 'DefaultArtifactsRelativePath')
 
         # Images path
-        images_path_row = layout.row()
+        images_path_row = output_layout.row()
         images_path_row.prop(scene, 'ImagesPath')
 
         # Sequences path
-        sequences_path_row = layout.row()
+        sequences_path_row = output_layout.row()
         sequences_path_row.prop(scene, 'SequencesPath')
 
         # Meshes path
-        meshes_path_row = layout.row()
+        meshes_path_row = output_layout.row()
         meshes_path_row.prop(scene, 'MeshesPath')
 
         # Morphologies path
@@ -199,7 +208,7 @@ class IOPanel(bpy.types.Panel):
         morphologies_path_row.prop(scene, 'MorphologiesPath')
 
         # Analysis path
-        analysis_path_row = layout.row()
+        analysis_path_row = output_layout.row()
         analysis_path_row.prop(scene, 'AnalysisPath')
 
         # Disable the default paths selection if the use default paths flag is set
@@ -227,6 +236,55 @@ class IOPanel(bpy.types.Panel):
             nmv.interface.ui_options.io.analysis_directory = \
                 '%s/%s' % (scene.OutputDirectory, scene.AnalysisPath)
 
+        # If the morphology is not loaded, disable the UI
+        if nmv.interface.ui_morphology is None:
+            output_layout.enabled = False
+        else:
+            output_layout.enabled = True
+
+
+####################################################################################################
+# @LoadMorphology
+####################################################################################################
+class LoadMorphology(bpy.types.Operator):
+    """Repair the morphology skeleton, detect the artifacts and fix them
+    """
+
+    # Operator parameters
+    bl_idname = "load.morphology"
+    bl_label = "Load Morphology"
+
+    ################################################################################################
+    # @execute
+    ################################################################################################
+    def execute(self,
+                context):
+        """Execute the operator.
+
+        :param context:
+            Rendering context
+        :return:
+            'FINISHED'
+        """
+
+        # Clear the scene
+        nmv.scene.ops.clear_scene()
+
+        # Load the morphology file
+        loading_result = nmv.interface.ui.load_morphology(self, context.scene)
+
+        # If the result is None, report the issue
+        if loading_result is None:
+            self.report({'ERROR'}, 'Please select a morphology file')
+            return {'FINISHED'}
+
+        # Plot the morphology (whatever issues it contains)
+        nmv.interface.ui.sketch_morphology_skeleton_guide(
+            morphology=nmv.interface.ui_morphology,
+            options=copy.deepcopy(nmv.interface.ui_options))
+
+        return {'FINISHED'}
+
 
 ####################################################################################################
 # @register_panel
@@ -237,6 +295,9 @@ def register_panel():
     # InputOutput data
     bpy.utils.register_class(IOPanel)
 
+    # Button
+    bpy.utils.register_class(LoadMorphology)
+
 
 ####################################################################################################
 # @unregister_panel
@@ -246,3 +307,6 @@ def unregister_panel():
 
     # InputOutput data
     bpy.utils.unregister_class(IOPanel)
+
+    # Button
+    bpy.utils.register_class(LoadMorphology)

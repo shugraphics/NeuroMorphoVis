@@ -311,6 +311,10 @@ class SomaPanel(bpy.types.Panel):
             render_view_buttons_row.enabled = False
             render_animations_buttons_row.enabled = False
 
+        # If the morphology is not loaded, disable the UI
+        if nmv.interface.ui_morphology is None:
+            layout.enabled = False
+
 
 ####################################################################################################
 # @ReconstructSoma

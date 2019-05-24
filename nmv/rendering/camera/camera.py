@@ -495,8 +495,9 @@ class Camera:
         self.setup_camera_for_scene(bounding_box, camera_view, camera_projection)
 
         # Update the camera resolution
-        self.update_camera_resolution(resolution=image_resolution, camera_view=camera_view,
-            bounds=bounding_box.bounds)
+        self.update_camera_resolution(
+            resolution=image_resolution, camera_view=camera_view, bounds=bounding_box.bounds)
+
         if camera_projection == nmv.enums.Camera.Projection.PERSPECTIVE:
             self.camera.data.type = 'PERSP'
             bpy.context.object.data.angle = math.radians(45.0)

@@ -34,6 +34,7 @@ import nmv.scene
 import nmv.shading
 import nmv.skeleton
 import nmv.bmeshi
+import nmv.utilities
 
 
 ####################################################################################################
@@ -148,8 +149,8 @@ class SkeletonBuilder:
         """
         output = list()
         for sample in section.samples:
-            sphere = nmv.bmeshi.create_ico_sphere(radius=sample.radius, location=sample.point,
-                                                  subdivisions=3)
+            sphere = nmv.bmeshi.create_ico_sphere(
+                radius=sample.radius, location=sample.point, subdivisions=3)
             output.append(sphere)
         return output
 
@@ -292,13 +293,17 @@ class SkeletonBuilder:
         """Draw the section as a list of spheres.
 
         :param root:
+            Arbor root.
         :param name:
+            Th ename of the section.
         :param material_list:
+            Sphere material.
         :param segments_objects:
+            A list of all the drawn spheres.
         :param branching_level:
+            Current branching level.
         :param max_branching_level:
-        :param bevel_object:
-        :return:
+            Maximum branching level the section can grow up to: infinity.
         """
 
         # Ignore the drawing if the root section is None
@@ -538,6 +543,12 @@ class SkeletonBuilder:
 
                 # Convert the objects to something and add them to the scene
                 for i, item in enumerate(axon_segments_objects):
+
+                    # Show the progress
+                    nmv.utilities.show_progress(
+                        '** Linking', float(i), float(len(axon_segments_objects)))
+
+                    # Link
                     sphere_mesh = nmv.bmeshi.ops.link_to_new_object_in_scene(
                         item, '%s_%d' % ('axon', i))
 
@@ -550,13 +561,16 @@ class SkeletonBuilder:
                     # Append the sphere mesh to the morphology objects
                     morphology_objects.append(sphere_mesh)
 
+                # Show the progress
+                nmv.utilities.show_progress('** Linking', 0, 0, done=True)
+
         # Draw the basal dendrites
         if not self.options.morphology.ignore_basal_dendrites:
 
             # Ensure tha existence of basal dendrites
             if self.morphology.dendrites is not None:
-                basal_dendrites_segments_objects = []
 
+                basal_dendrites_segments_objects = []
                 for i, basal_dendrite in enumerate(self.morphology.dendrites):
                     nmv.logger.info('Basal dendrite [%d]' % i)
                     dendrite_name = '%s_%d' % (nmv.consts.Arbors.BASAL_DENDRITES_PREFIX, i)
@@ -568,6 +582,12 @@ class SkeletonBuilder:
 
                 # Convert the objects to something and add them to the scene
                 for i, item in enumerate(basal_dendrites_segments_objects):
+
+                    # Show the progress
+                    nmv.utilities.show_progress(
+                        '** Linking', float(i), float(len(basal_dendrites_segments_objects)))
+
+                    # Link
                     sphere_mesh = nmv.bmeshi.ops.link_to_new_object_in_scene(
                         item, '%s_%d' % ('basal_dendrite', i))
 
@@ -580,6 +600,9 @@ class SkeletonBuilder:
 
                     # Append the sphere mesh to the morphology objects
                     morphology_objects.append(sphere_mesh)
+
+                # Show the progress
+                nmv.utilities.show_progress('** Linking', 0, 0, done=True)
 
         # Draw the apical dendrite
         if not self.options.morphology.ignore_apical_dendrite:
@@ -598,6 +621,12 @@ class SkeletonBuilder:
 
                 # Convert the objects to something and add them to the scene
                 for i, item in enumerate(apical_dendrite_segments_objects):
+
+                    # Show the progress
+                    nmv.utilities.show_progress(
+                        '** Linking', float(i), float(len(apical_dendrite_segments_objects)))
+
+                    # Link
                     sphere_mesh = nmv.bmeshi.ops.link_to_new_object_in_scene(
                         item, '%s_%d' % ('apical_dendrite', i))
 
@@ -610,6 +639,9 @@ class SkeletonBuilder:
 
                     # Append the sphere mesh to the morphology objects
                     morphology_objects.append(sphere_mesh)
+
+                # Show the progress
+                nmv.utilities.show_progress('** Linking', 0, 0, done=True)
 
         # Return a list of the morphology objects
         return morphology_objects

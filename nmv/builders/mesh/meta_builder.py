@@ -30,6 +30,7 @@ import nmv.shading
 import nmv.skeleton
 import nmv.utilities
 import nmv.scene
+import nmv.rendering
 
 
 ####################################################################################################
@@ -93,6 +94,25 @@ class MetaBuilder:
 
         # Stats. about the mesh
         self.mesh_statistics = 'MetaBuilder Mesh: \n'
+
+        self.frame_index = 0
+
+    ################################################################################################
+    # @create_progressive_camera
+    ################################################################################################
+    def render_frame(self, frame_index):
+
+        # Compute the full morphology bounding box
+        bounding_box = nmv.skeleton.compute_full_morphology_bounding_box(morphology=self.morphology)
+
+        # Render the image
+        nmv.rendering.render(
+            bounding_box=bounding_box,
+            camera_view='FRONT',
+            image_resolution=512,
+            image_name='%d' % (frame_index),
+            image_directory=self.options.io.images_directory,
+            keep_camera_in_scene=False)
 
     ################################################################################################
     # @verify_morphology_skeleton
@@ -163,6 +183,9 @@ class MetaBuilder:
 
         # Construct the meta elements along the segment
         while travelled_distance < segment_length:
+
+            # self.render_frame(frame_index=self.frame_index)
+            # self.frame_index += 1
 
             # Make a meta ball (or sphere) at this point
             meta_element = self.meta_skeleton.elements.new()
@@ -295,6 +318,12 @@ class MetaBuilder:
 
         # Create a new meta object that reflects the reconstructed mesh at the end of the operation
         self.meta_mesh = bpy.data.objects.new(name, self.meta_skeleton)
+
+        # Activate the mesh object
+        nmv.scene.set_active_object(self.meta_mesh)
+
+        # Assign the material to the selected mesh
+        nmv.shading.set_material_to_object(self.meta_mesh, self.soma_materials[0])
 
         # Get a reference to the scene
         scene = bpy.context.scene
@@ -431,6 +460,10 @@ class MetaBuilder:
         # Verify and repair the morphology, if required
         result, stats = nmv.utilities.profile_function(self.verify_morphology_skeleton)
         self.profiling_statistics += stats
+
+        # NOTE: Before drawing the skeleton, create the materials once and for all to improve the
+        # performance since this is way better than creating a new material per section or segment
+        nmv.builders.common.create_skeleton_materials(builder=self)
 
         # Apply skeleton-based operation, if required, to slightly modify the skeleton
         result, stats = nmv.utilities.profile_function(

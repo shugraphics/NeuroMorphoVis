@@ -17,6 +17,7 @@
 
 import nmv
 import nmv.analysis
+import nmv.consts
 import nmv.skeleton
 
 
@@ -254,16 +255,16 @@ def compute_minimum_sample_radius_of_arbor(arbor):
     """
 
     # A list that will contain the radii of all the samples along a given section
-    sections_samples_radii = list()
+    analysis_results_of_sections = list()
 
     # Append the radii of the samples to the list
     nmv.skeleton.ops.apply_operation_to_arbor(
         *[arbor,
           nmv.analysis.compute_minimum_sample_radius_per_section,
-          sections_samples_radii])
+          analysis_results_of_sections])
 
-    # Return the minimum sample radius
-    return min(sections_samples_radii)
+    # Get the minimum results
+    return nmv.analysis.get_minimum_value_of_results(analysis_results_of_sections)
 
 
 ####################################################################################################
@@ -279,16 +280,16 @@ def compute_maximum_sample_radius_of_arbor(arbor):
     """
 
     # A list that will contain the radii of all the samples along a given section
-    sections_samples_radii = list()
+    analysis_results_of_sections = list()
 
     # Append the radii of the samples to the list
     nmv.skeleton.ops.apply_operation_to_arbor(
         *[arbor,
           nmv.analysis.compute_maximum_sample_radius_per_section,
-          sections_samples_radii])
+          analysis_results_of_sections])
 
-    # Return the maximum sample radius
-    return max(sections_samples_radii)
+    # Get the maximum results
+    return nmv.analysis.get_maximum_value_of_results(analysis_results_of_sections)
 
 
 ####################################################################################################

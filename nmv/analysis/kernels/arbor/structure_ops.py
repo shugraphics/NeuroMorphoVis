@@ -197,10 +197,8 @@ def compute_total_number_of_terminal_tips_of_arbor(arbor):
     # Apply the operation per section
     nmv.skeleton.ops.apply_operation_to_arbor(*[arbor, nmv.analysis.compute_terminal_tips, tips])
 
-    # Calculate the total
-    total_tips = 0
     for tip in tips:
-        total_tips += tip
+        print(tip.value)
 
     # Return the total
-    return total_tips
+    return nmv.analysis.get_total_value_of_results(tips)

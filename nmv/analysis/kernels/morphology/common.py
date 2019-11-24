@@ -18,6 +18,103 @@
 # Internal imports
 import nmv
 import nmv.analysis
+import nmv.consts
+
+
+####################################################################################################
+# @get_minimum_value_of_results
+####################################################################################################
+def get_minimum_value_of_results(results):
+    """Returns the result of the minimum value for a given list of results.
+
+    :param results:
+        A given list of analysis results.
+    :return:
+        The result with minimum value.
+    """
+
+    # Minimum result
+    minimum_result = nmv.analysis.ItemAnalysisResult
+
+    # Find the minimum value
+    current_minimum_value = nmv.consts.Math.INFINITY
+
+    # Per result
+    for result in results:
+
+        # If the radius is less than the minimum
+        if result.value < current_minimum_value:
+
+            # Update the current minimum value
+            current_minimum_value = result.value
+
+            # Update the final result as well
+            minimum_result = result
+
+    # Return the minimum result
+    return minimum_result
+
+
+####################################################################################################
+# @get_maximum_value_of_results
+####################################################################################################
+def get_maximum_value_of_results(results):
+    """Returns the result of the maximum value for a given list of results.
+
+    :param results:
+        A given list of analysis results.
+    :return:
+        The result with maximum value.
+    """
+
+    # Maximum result
+    maximum_result = nmv.analysis.ItemAnalysisResult
+
+    # Find the maximum value
+    current_maximum_value = nmv.consts.Math.SMALLEST_VALUE
+
+    # Per result
+    for result in results:
+
+        # If the radius is greater than the minimum
+        if result.value > current_maximum_value:
+
+            # Update the current maximum value
+            current_maximum_value = result.value
+
+            # Update the final result as well
+            maximum_result = result
+
+    # Return the maximum result
+    return maximum_result
+
+
+####################################################################################################
+# @get_total_value_of_results
+####################################################################################################
+def get_total_value_of_results(results):
+    """Returns the sum (or the aggregated result) of a given list of results.
+
+    :param results:
+        A given list of analysis results.
+    :return:
+        A result with the aggregated results.
+    """
+
+    # Total result
+    total_result = nmv.analysis.ItemAnalysisResult()
+
+    # Initialize with Zero
+    total_result.value = 0
+
+    # Per result
+    for i_result in results:
+
+        # Add to the total
+        total_result.value += i_result.value
+
+    # Return the total result
+    return total_result
 
 
 ####################################################################################################
@@ -106,20 +203,23 @@ def compute_total_analysis_result_of_morphology(analysis_result):
     """
 
     # Aggregate result of the entire morphology will be computed later
-    analysis_result.morphology_result = 0
+    analysis_result.morphology_result = nmv.analysis.ItemAnalysisResult
+
+    # Initialize the value to Zero
+    analysis_result.morphology_result.value = 0
 
     # Apical dendrite
     if analysis_result.apical_dendrite_result is not None:
-        analysis_result.morphology_result += analysis_result.apical_dendrite_result
+        analysis_result.morphology_result.value += analysis_result.apical_dendrite_result.value
 
     # Basal dendrites
     if analysis_result.basal_dendrites_result is not None:
         for basal_dendrite_result in analysis_result.basal_dendrites_result:
-            analysis_result.morphology_result += basal_dendrite_result
+            analysis_result.morphology_result.value += basal_dendrite_result.value
 
     # Axon
     if analysis_result.axon_result is not None:
-        analysis_result.morphology_result += analysis_result.axon_result
+        analysis_result.morphology_result.value += analysis_result.axon_result.value
 
 
 ####################################################################################################
@@ -151,8 +251,20 @@ def compute_minimum_analysis_result_of_morphology(analysis_result):
     if analysis_result.axon_result is not None:
         all_arbors_results.append(analysis_result.axon_result)
 
-    # Update the morphology result
-    analysis_result.morphology_result = min(all_arbors_results)
+    # Minimum value
+    minimum_value = nmv.consts.Math.INFINITY
+
+    # Per result
+    for result in all_arbors_results:
+
+        # If the value if less than the minimum value
+        if result.value < minimum_value:
+
+            # Update the minimum value
+            minimum_value = result.value
+
+            # Update the morphology result
+            analysis_result.morphology_result = result
 
 
 ####################################################################################################
@@ -184,8 +296,20 @@ def compute_maximum_analysis_result_of_morphology(analysis_result):
     if analysis_result.axon_result is not None:
         all_arbors_results.append(analysis_result.axon_result)
 
-    # Update the morphology result
-    analysis_result.morphology_result = max(all_arbors_results)
+    # Maximum value
+    maximum_value = nmv.consts.Math.SMALLEST_VALUE
+
+    # Per result
+    for result in all_arbors_results:
+
+        # If the value if greater than the minimum value
+        if result.value > maximum_value:
+
+            # Update the maximum value
+            maximum_value = result.value
+
+            # Update the morphology result
+            analysis_result.morphology_result = result
 
 
 ####################################################################################################
@@ -240,7 +364,7 @@ def invoke_kernel(morphology,
         The function that will aggregate the entire morphology analysis result from the
         individual arbors, for example minimum, maximum, average or total.
     :return:
-        The analysis results as an @AnalysisResult structure.
+        The analysis results as an @MorphologyAnalysisResult structure.
     """
 
     # Apply the analysis operation to the morphology

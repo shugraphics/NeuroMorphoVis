@@ -234,13 +234,13 @@ class AnalysisItem:
 
         # Morphology
         self.update_analysis_variable(
-            prefix='Morphology', result=self.result.morphology_result, context=context)
+            prefix='Morphology', result=self.result.morphology_result.value, context=context)
 
         # Apical dendrite
         if morphology.apical_dendrite is not None:
 
             # Get the apical dendrite result
-            result = self.result.apical_dendrite_result
+            result = self.result.apical_dendrite_result.value
 
             # Update the corresponding analysis variable
             self.update_analysis_variable(
@@ -253,7 +253,7 @@ class AnalysisItem:
             for i, basal_dendrite in enumerate(morphology.dendrites):
 
                 # Get the result of this basal dendrite
-                result = self.result.basal_dendrites_result[i]
+                result = self.result.basal_dendrites_result[i].value
 
                 # Update the corresponding analysis variable
                 self.update_analysis_variable(
@@ -264,7 +264,7 @@ class AnalysisItem:
         if morphology.axon is not None:
 
             # Get the axon result
-            result = self.result.axon_result
+            result = self.result.axon_result.value
 
             # Update the corresponding analysis variable
             self.update_analysis_variable(
@@ -389,7 +389,7 @@ class AnalysisItem:
         if self.kernel is not None:
 
             # Get the result from applying the kernel on the entire morphology skeleton
-            self.result = self.kernel(morphology)
+            self.result = self.kernel(morphology).value
 
             # Get the analysis results string
             analysis_results_string += '%s \n' % self.get_analysis_results_string(morphology)

@@ -15,43 +15,41 @@
 # If not, see <http://www.gnu.org/licenses/>.
 ####################################################################################################
 
-# Blender imports
-from mathutils import Vector
-
 
 ####################################################################################################
-# Math
+# @MorphologyAnalysisResult
 ####################################################################################################
-class Math:
-    """Math constants
-    """
+class MorphologyAnalysisResult:
 
     ################################################################################################
     # @__init__
     ################################################################################################
-    def __init__(self):
-        pass
+    def __init__(self,
+                 apical_dendrite_result=None,
+                 basal_dendrites_result=None,
+                 axon_result=None,
+                 morphology_result=None):
+        """Constructor
 
-    # Infinity
-    INFINITY = 1e30
+        :param apical_dendrite_result:
+            The analysis result of the apical dendrite.
+        :param basal_dendrites_result:
+            The analysis result of the basal dendrites.
+        :param axon_result:
+            The analysis result of the axon.
+        :param morphology_result:
+            The aggregate analysis result of the entire morphology.
+            This is computed for each respective filter from the results of the individual arbors.
+        """
 
-    # Smallest value
-    SMALLEST_VALUE = -1 * 1e30
+        # Apical dendrite
+        self.apical_dendrite_result = apical_dendrite_result
 
-    # Epsilon
-    EPSILON = 0.99
+        # Basal dendrites
+        self.basal_dendrites_result = basal_dendrites_result
 
-    # Little Epsilon
-    LITTLE_EPSILON = 1e-5
+        # Axon
+        self.axon_result = axon_result
 
-    # Origin
-    ORIGIN = Vector((0.0, 0.0, 0.0))
-
-    # X-axis
-    X_AXIS = Vector((1.0, 0.0, 0.0))
-
-    # Y-axis
-    Y_AXIS = Vector((0.0, 1.0, 0.0))
-
-    # Z-axis
-    Z_AXIS = Vector((.0, 0.0, 1.0))
+        # Entire morphology (the aggregate)
+        self.morphology_result = morphology_result

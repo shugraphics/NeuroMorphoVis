@@ -43,6 +43,11 @@ ui_per_arbor_analysis_items = [
                  description='The total number of samples (or digitized points)',
                  data_format='INT'),
 
+]
+'''
+                 
+    
+
     AnalysisItem(variable='TotalNumberSections',
                  name='Total # Sections',
                  kernel=kernel_total_number_sections,
@@ -296,7 +301,7 @@ ui_per_arbor_analysis_items = [
                  data_format='FLOAT',
                  unit='VOLUME'),
 ]
-
+'''
 
 ####################################################################################################
 # Global analysis items, only applied on a global level not per-arbor level

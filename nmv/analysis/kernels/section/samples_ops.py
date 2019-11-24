@@ -20,6 +20,8 @@ import copy
 
 # Internal imports
 import nmv
+import nmv.analysis
+import nmv.consts
 
 
 ####################################################################################################
@@ -70,7 +72,17 @@ def compute_number_of_segments_per_section(section,
         A list to collect the analysis data.
     """
 
-    analysis_data.append(len(section.samples) - 1)
+    # Analysis result
+    result = nmv.analysis.ItemAnalysisResult()
+
+    # Add the value
+    result.value = len(section.samples) - 1
+
+    # Add the branching order
+    result.branching_order = section.branching_order
+
+    # Append the result
+    analysis_data.append(result)
 
 
 ####################################################################################################
@@ -109,13 +121,32 @@ def compute_minimum_sample_radius_per_section(section,
         A list to collect the analysis data.
     """
 
-    # A list of radii of all the samples of a given section
-    radii = list()
+    # Analysis result
+    result = nmv.analysis.ItemAnalysisResult
 
+    # Find the minimum radius
+    minimum_radius = nmv.consts.Math.INFINITY
+
+    # Per sample
     for i_sample in section.samples:
-        radii.append(i_sample.radius)
 
-    analysis_data.append(min(radii))
+        # If the current radius is less than the minimum radius
+        if i_sample.radius < minimum_radius:
+
+            # Update the minimum radius value for the iterations
+            minimum_radius = i_sample.radius
+
+            # Update the analysis value
+            result.value = i_sample.radius
+
+            # Branching order is the same
+            result.branching_order = section.branching_order
+
+            # Update the radius distance
+            result.radial_distance = i_sample.point.length
+
+    # Add the result to the analysis data
+    analysis_data.append(copy.deepcopy(result))
 
 
 ####################################################################################################
@@ -131,13 +162,32 @@ def compute_maximum_sample_radius_per_section(section,
         A list to collect the analysis data.
     """
 
-    # A list of radii of all the samples of a given section
-    radii = list()
+    # Analysis result
+    result = nmv.analysis.ItemAnalysisResult()
 
+    # Find the maximum radius
+    maximum_radius = nmv.consts.Math.SMALLEST_VALUE
+
+    # Per sample
     for i_sample in section.samples:
-        radii.append(i_sample.radius)
 
-    analysis_data.append(max(radii))
+        # If the current radius is greater than the minimum radius
+        if i_sample.radius > maximum_radius:
+
+            # Update the maximum radius value for the iterations
+            maximum_radius = i_sample.radius
+
+            # Update the analysis value
+            result.value = i_sample.radius
+
+            # Branching order is the same
+            result.branching_order = section.branching_order
+
+            # Update the radius distance
+            result.radial_distance = i_sample.point.length
+
+    # Add the result to the analysis data
+    analysis_data.append(copy.deepcopy(result))
 
 
 ####################################################################################################
@@ -269,7 +319,7 @@ def count_trifurcations(section,
 
 
 ####################################################################################################
-# @count_trifurcations
+# @compute_terminal_tips
 ####################################################################################################
 def compute_terminal_tips(section,
                           analysis_data):
@@ -283,7 +333,9 @@ def compute_terminal_tips(section,
     """
 
     if section.is_leaf():
-        analysis_data.append(1)
+        result = nmv.analysis.ItemAnalysisResult
+        result.value = 1
+        analysis_data.append(copy.deepcopy(result))
 
 
 ####################################################################################################

@@ -1,5 +1,5 @@
 ####################################################################################################
-# Copyright (c) 2016 - 2018, EPFL / Blue Brain Project
+# Copyright (c) 2019, EPFL / Blue Brain Project
 #               Marwan Abdellah <marwan.abdellah@epfl.ch>
 #
 # This file is part of NeuroMorphoVis <https://github.com/BlueBrain/NeuroMorphoVis>
@@ -17,39 +17,20 @@
 
 
 ####################################################################################################
-# @AnalysisResult
+# @MorphologyAnalysisResult
 ####################################################################################################
-class AnalysisResult:
+class ItemAnalysisResult:
 
     ################################################################################################
     # @__init__
     ################################################################################################
-    def __init__(self,
-                 apical_dendrite_result=None,
-                 basal_dendrites_result=None,
-                 axon_result=None,
-                 morphology_result=None):
-        """Constructor
+    def __init__(self):
 
-        :param apical_dendrite_result:
-            The analysis result of the apical dendrite.
-        :param basal_dendrites_result:
-            The analysis result of the basal dendrites.
-        :param axon_result:
-            The analysis result of the axon.
-        :param morphology_result:
-            The aggregate analysis result of the entire morphology.
-            This is computed for each respective filter from the results of the individual arbors.
-        """
+        # The value of a specific analysis item (of a sample) in the morphology
+        self.value = None
 
-        # Apical dendrite
-        self.apical_dendrite_result = apical_dendrite_result
+        # The branching order at this specific sample
+        self.branching_order = None
 
-        # Basal dendrites
-        self.basal_dendrites_result = basal_dendrites_result
-
-        # Axon
-        self.axon_result = axon_result
-
-        # Entire morphology
-        self.morphology_result = morphology_result
+        # The distance between the position of this sample and the origin (for Sholl analysis)
+        self.radial_distance = None
